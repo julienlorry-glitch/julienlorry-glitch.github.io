@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Votre projet d'achat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5FA; --surface:#FFFFFF; --ink:#14233A; --muted:#56657A; --line:#D5DEEA;
+  --accent:#1A4F9C; --accent-soft:#E2EBF7; --ochre:#0093D3; --ochre-soft:#E2F2FB;
+  --band:#1A4F9C; --band-ink:#FFFFFF; --on-accent:#FFFFFF;
+  --neg:#A4453A; --pos:#2E7A52; --warn:#9A6B12;
+  --sans:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1724; --surface:#162133; --ink:#E5ECF5; --muted:#9AA9BD; --line:#273650;
+    --accent:#7FB0EE; --accent-soft:#1B2D4A; --ochre:#5CC2EE; --ochre-soft:#132F48;
+    --band:#13305E; --band-ink:#FFFFFF; --on-accent:#0B1526;
+    --neg:#E08678; --pos:#7CC79C; --warn:#E3B55C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1724; --surface:#162133; --ink:#E5ECF5; --muted:#9AA9BD; --line:#273650;
+  --accent:#7FB0EE; --accent-soft:#1B2D4A; --ochre:#5CC2EE; --ochre-soft:#132F48;
+  --band:#13305E; --band-ink:#FFFFFF; --on-accent:#0B1526;
+  --neg:#E08678; --pos:#7CC79C; --warn:#E3B55C;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;overflow:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.band{background:var(--band);color:var(--band-ink);padding-top:env(safe-area-inset-top,0px);flex:none}
+.band-in{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.band img{height:54px;width:54px;display:block;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+.wordmark{font-family:var(--serif);font-weight:600;font-size:1.35rem}
+.band small{opacity:.85;font-size:.85rem}
+.band .restart{margin-left:auto;background:none;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:5px 10px;font-size:.82rem;cursor:pointer}
+
+.progress{flex:none;height:4px;background:var(--accent-soft)}
+.progress i{display:block;height:100%;width:0;background:var(--ochre);transition:width .4s}
+@media (prefers-reduced-motion:reduce){.progress i{transition:none}}
+
+#chat{flex:1;min-height:0;overflow-y:auto;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){#chat{scroll-behavior:auto}}
+.chat-in{max-width:760px;margin:0 auto;padding:20px 16px 12px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:min(560px,86%);padding:10px 14px;border-radius:14px;white-space:pre-line;overflow-wrap:anywhere}
+.msg.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--on-accent);border-bottom-right-radius:4px}
+.msg.me button.edit{display:block;margin:4px 0 0 auto;background:none;border:0;color:inherit;opacity:.75;font-size:.75rem;cursor:pointer;padding:0;text-decoration:underline}
+.msg.tip{align-self:flex-start;background:var(--ochre-soft);border:0;border-left:3px solid var(--ochre);border-radius:6px;font-size:.92rem}
+.msg b{font-weight:600}
+.section-title{align-self:center;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:10px 0 2px}
+.typing{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;gap:4px}
+.typing span{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:blink 1s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.typing span{animation:none;opacity:.6}}
+
+#composer{flex:none;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.comp-in{max-width:760px;margin:0 auto;padding:12px 16px 14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:.92rem}
+.chip:hover{background:var(--accent-soft)}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.chip.ghost{border-color:var(--line);color:var(--muted)}
+.inrow{display:flex;gap:8px;align-items:stretch}
+.inrow input,.inrow textarea{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:1rem}
+.inrow textarea{resize:none;min-height:46px}
+.send{border:0;background:var(--accent);color:var(--on-accent);border-radius:10px;padding:0 18px;font-weight:700;cursor:pointer}
+.send:disabled{opacity:.45;cursor:default}
+.below{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;font-size:.8rem;color:var(--muted)}
+.below button{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:.8rem;padding:0}
+.err{color:var(--neg)}
+.multi-actions{display:flex;justify-content:flex-end;margin-top:10px}
+.fieldgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.fieldgrid input{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:1rem;min-width:0;width:100%}
+.fieldgrid .full{grid-column:1/-1}
+@media (max-width:520px){.fieldgrid{grid-template-columns:1fr}}
+
+/* Synthèse */
+.card{align-self:stretch;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 18px 14px}
+.card h2{font-family:var(--serif);font-size:1.3rem;margin:0 0 2px}
+.card .sub{color:var(--muted);font-size:.88rem;margin:0 0 14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--bg);border-radius:8px;padding:10px 12px}
+.kpi span{display:block;font-size:.78rem;color:var(--muted)}
+.kpi b{font-family:var(--serif);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:700}
+.badge.hot{background:var(--pos);color:#fff}.badge.warm{background:var(--warn);color:#fff}.badge.cold{background:var(--muted);color:#fff}
+:root[data-theme="dark"] .badge{color:#0B1526}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .badge{color:#0B1526}}
+.card table{width:100%;border-collapse:collapse;font-size:.9rem}
+.card td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.card td:first-child{color:var(--muted);width:42%;padding-right:10px}
+.card h3{font-size:.95rem;margin:16px 0 6px}
+.card ul{margin:0;padding-left:18px}
+.card li{margin:3px 0}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.btn{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:600;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.legal{font-size:.75rem;color:var(--muted);margin-top:12px}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+@media print{.band,.progress,#composer,.section-title,.msg,.actions,.typing{display:none!important}html,body{height:auto;overflow:visible}body{display:block}#chat{overflow:visible}.card{border:0}}
+</style>
+</head>
+<body>
+<div class="band">
+  <div class="band-in">
+    <img id="logo" src="logo-laforet.png" alt="Laforêt Immobilier" onerror="this.remove();document.getElementById('wordmark').hidden=false">
+    <span id="wordmark" class="wordmark" hidden>Laforêt</span>
+    <small>Agence de Benfeld</small>
+    <button class="restart" id="restart" type="button">Recommencer</button>
+  </div>
+</div>
+<div class="progress" aria-hidden="true"><i id="bar"></i></div>
+<div id="chat" aria-live="polite"><div class="chat-in" id="log"></div></div>
+<div id="composer"><div class="comp-in" id="input"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============================================================
+   Réglages de l'agence — à compléter
+   ============================================================ */
+const AGENCE = {
+  nom: "Laforêt Benfeld",
+  conseiller: "votre conseiller Laforêt",
+  email: "jlorry@laforet.com", // adresse qui reçoit les fiches projet
+  telephone: "06 87 12 94 41" // affiché en fin de questionnaire
+};
+// Hypothèses de financement (indicatives, à ajuster selon le marché)
+const FIN = { taux: 3.3, duree: 25, endettement: 0.35, notaireAncien: 0.075, notaireNeuf: 0.025 };
+// Prix moyens au m² (repris de l'outil d'estimation)
+const PRIX = {
+  "Benfeld":[2600,2450],"Erstein":[2750,2600],"Hindisheim":[2800,2600],"Limersheim":[2750,2500],
+  "Schaeffersheim":[2600,2400],"Osthouse":[2600,2400],"Uttenheim":[2550,2300],"Westhouse":[2500,2300],
+  "Sand":[2600,2400],"Matzenheim":[2550,2300],"Huttenheim":[2500,2300],"Kogenheim":[2550,2300],
+  "Sermersheim":[2450,2200],"Nordhouse":[2500,2300],"Gerstheim":[2450,2200],"Obenheim":[2350,2150],
+  "Rossfeld":[2400,2200],"Herbsheim":[2350,2100],"Boofzheim":[2300,2100],"Friesenheim":[2250,2050],
+  "Witternheim":[2250,2050],"Rhinau":[2300,2100]
+};
+const COMMUNES = Object.keys(PRIX).sort((a,b)=>a.localeCompare(b,"fr"));
+
+/* ============================================================
+   Outils
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const eur=n=>Math.round(n).toLocaleString("fr-FR")+" €";
+const k=n=>n>=10000?Math.round(n/1000).toLocaleString("fr-FR")+" k€":eur(n);
+const parseNum=v=>{if(v==null)return NaN;let s=String(v).toLowerCase().replace(/\s|€|eur(os)?/g,"").replace(",",".");
+  let m=1;if(/k$/.test(s)){m=1000;s=s.slice(0,-1)}else if(/m$/.test(s)&&!/m²|m2/.test(s)){m=1e6;s=s.slice(0,-1)}
+  s=s.replace(/m²|m2/,"");const n=parseFloat(s);return isNaN(n)?NaN:n*m};
+const lsGet=key=>{try{return JSON.parse(localStorage.getItem(key))}catch(e){return null}};
+const lsSet=(key,v)=>{try{localStorage.setItem(key,JSON.stringify(v))}catch(e){}};
+const lsDel=key=>{try{localStorage.removeItem(key)}catch(e){}};
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const wait=ms=>new Promise(r=>setTimeout(r,reduced?0:ms));
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("show"),2400)}
+
+/* Capacité d'emprunt : mensualité max sur la durée au taux donné */
+function capacite(revenusMensuels,creditsEnCours,taux=FIN.taux,duree=FIN.duree){
+  const mens=Math.max(0,revenusMensuels*FIN.endettement-(creditsEnCours||0));
+  const r=taux/100/12,n=duree*12;
+  return {mensualite:mens,montant:r?mens*(1-Math.pow(1+r,-n))/r:mens*n};
+}
+const prixM2=(a)=>{
+  const list=(a.communes&&a.communes.length&&!a.communes.includes("Indifférent"))?a.communes.filter(c=>PRIX[c]):COMMUNES;
+  const idx=a.typeBien==="Appartement"?1:0;
+  return list.reduce((s,c)=>s+PRIX[c][idx],0)/list.length;
+};
+
+/* ============================================================
+   Scénario de la conversation
+   Chaque étape : id, section, say (texte ou fonction), type de réponse,
+   options, condition (when), et réaction éventuelle (react).
+   ============================================================ */
+const STEPS=[
+  {id:"prenom",section:"Faisons connaissance",type:"text",placeholder:"Votre prénom",
+    say:()=>`Bonjour et bienvenue chez ${AGENCE.nom} 👋\nJe vais vous poser quelques questions sur votre projet d'achat, pour que ${AGENCE.conseiller} vous propose des biens vraiment adaptés.\nComptez 5 minutes. Vous pouvez revenir sur une réponse à tout moment.\n\nPour commencer, quel est votre prénom ?`,
+    validate:v=>v.trim().length>=2||"Indiquez votre prénom"},
+  {id:"objectif",type:"choice",options:["Résidence principale","Résidence secondaire","Investissement locatif"],
+    say:a=>`Enchanté ${a.prenom} ! Quel est l'objectif de cet achat ?`},
+  {id:"foyer",type:"choice",options:["Seul(e)","En couple","En couple avec enfants","Seul(e) avec enfants","Autre"],
+    when:a=>a.objectif!=="Investissement locatif",say:"Pour qui est ce logement ?"},
+  {id:"enfants",type:"number",placeholder:"Nombre d'enfants",min:1,max:12,unit:"",
+    when:a=>/enfants/.test(a.foyer||""),say:"Combien d'enfants vivront avec vous ?"},
+  {id:"premierAchat",type:"choice",options:["Oui, c'est mon premier achat","Non, j'ai déjà été propriétaire"],
+    say:"Est-ce votre premier achat immobilier ?",
+    react:a=>/^Oui/.test(a.premierAchat)&&a.objectif==="Résidence principale"?"Bonne nouvelle : en primo-accession, vous pouvez peut-être bénéficier du prêt à taux zéro (PTZ). Nous en reparlerons avec votre conseiller.":null},
+  {id:"logementActuel",type:"choice",options:["Locataire","Propriétaire","Hébergé(e)"],
+    say:"Actuellement, vous êtes…"},
+  {id:"venteNecessaire",type:"choice",options:["Oui, je dois vendre d'abord","Oui, en parallèle","Non, je garde mon bien"],
+    when:a=>a.logementActuel==="Propriétaire",say:"Devez-vous vendre votre logement actuel pour financer ce projet ?",
+    react:a=>/^Oui/.test(a.venteNecessaire)?`C'est noté. ${AGENCE.nom} peut estimer gratuitement votre bien actuel : c'est souvent la première étape pour sécuriser le budget.`:null},
+  {id:"venteAvancement",type:"choice",options:["Pas encore estimé","Estimé, pas encore en vente","En vente","Compromis signé"],
+    when:a=>/^Oui/.test(a.venteNecessaire||""),say:"Où en est cette vente ?"},
+  {id:"estimationOfferte",type:"choice",options:["Oui, avec plaisir","Non merci"],
+    when:a=>a.venteAvancement==="Pas encore estimé"||a.venteAvancement==="Estimé, pas encore en vente",
+    say:"Souhaitez-vous que nous estimions votre bien actuel ? (gratuit et sans engagement)"},
+
+  {id:"typeBien",section:"Le bien recherché",type:"choice",options:["Maison","Appartement","Terrain à bâtir","Indifférent"],
+    say:"Parlons du bien. Que recherchez-vous ?"},
+  {id:"etat",type:"choice",options:["Neuf ou récent","Bon état, rien à faire","Rafraîchissement accepté","Gros travaux acceptés"],
+    when:a=>a.typeBien!=="Terrain à bâtir",say:"Quel état acceptez-vous ?"},
+  {id:"communes",type:"multi",options:["Benfeld","Erstein","Indifférent",...COMMUNES.filter(c=>c!=="Benfeld"&&c!=="Erstein")],exclusive:"Indifférent",
+    say:"Dans quelles communes cherchez-vous ? Plusieurs choix possibles."},
+  {id:"criteresLieu",type:"multi",options:["Proche école","Proche gare","Proche commerces","Au calme","Accès A35 rapide","Pas de préférence"],exclusive:"Pas de préférence",
+    say:"Qu'est-ce qui compte pour l'emplacement ?"},
+  {id:"surface",type:"number",placeholder:"Ex. 110",unit:"m²",min:10,max:1000,
+    when:a=>a.typeBien!=="Terrain à bâtir",say:"Quelle surface habitable minimum souhaitez-vous (en m²) ?"},
+  {id:"chambres",type:"choice",options:["1","2","3","4","5 et +"],
+    when:a=>a.typeBien!=="Terrain à bâtir",
+    say:a=>{const n=a.enfants?+a.enfants:0;const hint=n?`\n(Avec ${n} enfant${n>1?"s":""}, je vous suggère au moins ${Math.min(5,n+1)} chambres.)`:"";return "Combien de chambres au minimum ?"+hint}},
+  {id:"terrain",type:"choice",options:["Pas important","Petit jardin (< 300 m²)","300 à 600 m²","Plus de 600 m²"],
+    when:a=>a.typeBien==="Maison"||a.typeBien==="Indifférent",say:"Et côté terrain ?"},
+  {id:"surfaceTerrain",type:"number",placeholder:"Ex. 500",unit:"m²",min:100,max:20000,
+    when:a=>a.typeBien==="Terrain à bâtir",say:"Quelle surface de terrain visez-vous (en m²) ?"},
+  {id:"etage",type:"choice",options:["Indifférent","Pas de rez-de-chaussée","Rez-de-chaussée de préférence","Ascenseur indispensable"],
+    when:a=>a.typeBien==="Appartement",say:"Une préférence pour l'étage ?"},
+  {id:"equipements",type:"multi",
+    options:a=>a.typeBien==="Appartement"?["Balcon / terrasse","Garage / box","Place de parking","Cave","Jardin privatif","Rien d'indispensable"]
+      :["Garage","Plain-pied","Sous-sol","Piscine","Atelier / dépendance","Rien d'indispensable"],
+    exclusive:"Rien d'indispensable",when:a=>a.typeBien!=="Terrain à bâtir",
+    say:"Quels éléments sont indispensables pour vous ?"},
+  {id:"dpe",type:"choice",options:["Peu importe","D minimum","C minimum","A ou B uniquement"],
+    when:a=>a.typeBien!=="Terrain à bâtir",say:"La performance énergétique (DPE) est-elle un critère ?",
+    react:a=>a.objectif==="Investissement locatif"&&a.dpe==="Peu importe"?"Attention : pour louer, les logements classés G sont interdits à la location depuis 2025, et les F le seront en 2028. Je le note pour votre conseiller.":null},
+  {id:"coupDeCoeur",type:"text",multiline:true,optional:true,placeholder:"Facultatif",
+    say:"Y a-t-il un élément décisif, ou au contraire rédhibitoire, que je n'ai pas évoqué ?"},
+
+  {id:"budget",section:"Budget et financement",type:"number",placeholder:"Ex. 280 000",unit:"€",min:20000,max:5000000,
+    say:"Passons au budget. Quel prix d'achat maximum envisagez-vous (hors frais de notaire) ?",
+    react:a=>{
+      if(a.typeBien==="Terrain à bâtir"||!a.surface)return null;
+      const pm=prixM2(a),besoin=pm*a.surface,ratio=a.budget/besoin;
+      const typ=a.typeBien==="Appartement"?"un appartement":"une maison";
+      if(ratio>=1.05)return `Votre budget est confortable : ${a.surface} m² dans ce secteur valent en moyenne ${k(besoin)}. Vous aurez du choix.`;
+      if(ratio>=0.9)return `Votre budget est cohérent avec le marché : comptez en moyenne ${k(besoin)} pour ${typ} de ${a.surface} m² dans ce secteur.`;
+      const surfPossible=Math.round(a.budget/pm/5)*5;
+      return `Je préfère être transparent : dans ce secteur, ${a.surface} m² valent en moyenne ${k(besoin)}. Avec ${k(a.budget)}, le marché propose plutôt autour de ${surfPossible} m², ou des biens avec travaux. Votre conseiller vous aidera à arbitrer.`;
+    }},
+  {id:"financement",type:"choice",options:["Prêt immobilier","Achat comptant","Je ne sais pas encore"],
+    say:"Comment pensez-vous financer l'achat ?"},
+  {id:"apport",type:"number",placeholder:"Ex. 30 000 (0 si aucun)",unit:"€",min:0,max:5000000,
+    when:a=>a.financement!=="Achat comptant",say:"De quel apport personnel disposez-vous ?",
+    react:a=>{const fn=a.budget*(a.etat==="Neuf ou récent"?FIN.notaireNeuf:FIN.notaireAncien);
+      return a.apport<fn?`Pour info, les frais de notaire représentent environ ${k(fn)} sur ce budget. Les banques aiment que l'apport les couvre, mais ce n'est pas bloquant.`:null}},
+  {id:"banque",type:"choice",options:["Oui, accord de principe","J'ai fait une simulation","Pas encore"],
+    when:a=>a.financement==="Prêt immobilier",say:"Avez-vous déjà rencontré une banque ou un courtier ?"},
+  {id:"montantBanque",type:"number",placeholder:"Montant accordé",unit:"€",min:1000,max:5000000,
+    when:a=>a.banque==="Oui, accord de principe",say:"Pour quel montant d'emprunt ?"},
+  {id:"revenus",type:"number",placeholder:"Ex. 4 200",unit:"€ / mois",min:300,max:200000,optional:true,
+    when:a=>a.financement!=="Achat comptant"&&a.banque!=="Oui, accord de principe",
+    say:"Pour vérifier la faisabilité, quels sont les revenus nets mensuels du foyer ? (facultatif, reste confidentiel)"},
+  {id:"credits",type:"number",placeholder:"0 si aucun",unit:"€ / mois",min:0,max:100000,
+    when:a=>a.revenus>0,say:"Et le total de vos mensualités de crédits en cours (auto, conso…) ?",
+    react:a=>{
+      const c=capacite(a.revenus,a.credits),total=c.montant+(a.apport||0);
+      const frais=a.budget*(a.etat==="Neuf ou récent"?FIN.notaireNeuf:FIN.notaireAncien);
+      const need=a.budget+frais;
+      let msg=`Estimation rapide : avec ${eur(c.mensualite)} de mensualité maximum (35 % d'endettement) sur ${FIN.duree} ans à ${FIN.taux.toLocaleString("fr-FR")} %, vous pourriez emprunter environ ${k(c.montant)}. Avec votre apport, cela fait une enveloppe d'environ ${k(total)}, pour un besoin de ${k(need)} frais de notaire compris.`;
+      if(total>=need)msg+="\n✅ Votre projet semble finançable.";
+      else if(total>=need*0.9)msg+="\n⚠️ C'est un peu juste : un courtier peut faire la différence.";
+      else msg+=`\n⚠️ L'écart est important. Un budget autour de ${k(total/(1+FIN.notaireAncien))} serait plus réaliste, sauf aide (PTZ, vente d'un bien…).`;
+      return msg+"\nCe calcul est indicatif et ne remplace pas l'avis d'une banque.";
+    }},
+  {id:"courtier",type:"choice",options:["Oui, volontiers","Non merci"],
+    when:a=>a.financement!=="Achat comptant"&&(a.banque==="Pas encore"||a.financement==="Je ne sais pas encore"),
+    say:"Souhaitez-vous être mis en relation avec un courtier partenaire pour optimiser votre financement ?"},
+
+  {id:"delai",section:"Calendrier",type:"choice",options:["Dès que possible","D'ici 3 mois","D'ici 6 mois","Dans plus de 6 mois","Je me renseigne"],
+    say:"Quand aimeriez-vous être installé(e) ou avoir signé ?"},
+  {id:"visites",type:"choice",options:["Pas encore","Quelques-unes","Beaucoup, sans succès"],
+    say:"Avez-vous déjà visité des biens ?",
+    react:a=>a.visites==="Beaucoup, sans succès"?"Merci de votre franchise. Ça nous aide : votre conseiller pourra vous proposer des biens avant leur mise en ligne.":null},
+  {id:"offreRefusee",type:"text",multiline:true,optional:true,placeholder:"Facultatif",
+    when:a=>a.visites==="Beaucoup, sans succès",say:"Qu'est-ce qui vous a freiné(e) jusqu'ici ?"},
+
+  {id:"contact",section:"Vos coordonnées",type:"contact",
+    say:a=>`Merci ${a.prenom}, c'est presque fini ! Comment ${AGENCE.conseiller} peut-il vous recontacter ?`},
+  {id:"moyen",type:"choice",options:["Téléphone","E-mail","SMS / WhatsApp","Visio"],say:"Quel moyen de contact préférez-vous ?"},
+  {id:"creneau",type:"multi",options:["Matin","Midi","Après-midi","Soir","Samedi"],say:"Et à quel moment ?"},
+  {id:"rgpd",type:"choice",options:["J'accepte","Je refuse"],
+    say:`Vos réponses seront transmises uniquement à ${AGENCE.nom} pour traiter votre recherche. Vous pouvez demander leur suppression à tout moment. Acceptez-vous ?`,
+    validate:v=>v==="J'accepte"||"Sans votre accord, nous ne pouvons pas transmettre votre fiche. Vous pouvez toutefois télécharger le récapitulatif pour vous."}
+];
+const SECTIONS=[...new Set(STEPS.filter(s=>s.section).map(s=>s.section))];
+
+/* ============================================================
+   Moteur
+   ============================================================ */
+let answers={}, history=[];   // history : ids des étapes répondues, dans l'ordre
+const STORE="questionnaire-acquereur";
+
+function nextStepIndex(from){
+  for(let i=from;i<STEPS.length;i++){const s=STEPS[i];if(!s.when||s.when(answers))return i}
+  return -1;
+}
+function save(){lsSet(STORE,{answers,history})}
+function progress(i){$("#bar").style.width=(i<0?100:Math.round(i/STEPS.length*100))+"%"}
+function scrollDown(){const c=$("#chat");c.scrollTop=c.scrollHeight}
+
+function addMsg(cls,html,opts={}){
+  const d=document.createElement("div");d.className="msg "+cls;d.innerHTML=html;
+  if(opts.editId){const b=document.createElement("button");b.className="edit";b.type="button";b.textContent="Modifier";
+    b.addEventListener("click",()=>editFrom(opts.editId));d.appendChild(b)}
+  $("#log").appendChild(d);scrollDown();return d;
+}
+function addSection(t){const d=document.createElement("div");d.className="section-title";d.textContent=t;$("#log").appendChild(d)}
+async function botSay(text,cls="bot"){
+  if(!text)return;
+  const t=document.createElement("div");t.className="typing";t.innerHTML="<span></span><span></span><span></span>";
+  $("#log").appendChild(t);scrollDown();
+  await wait(Math.min(1400,350+text.length*6));
+  t.remove();addMsg(cls,esc(text).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>"));
+}
+const sayText=(s)=>typeof s.say==="function"?s.say(answers):s.say;
+const optList=(s)=>typeof s.options==="function"?s.options(answers):s.options;
+function display(s,v){
+  if(v==null||v==="")return "—";
+  if(s.type==="number")return (+v).toLocaleString("fr-FR")+(s.unit?" "+s.unit:"");
+  if(s.type==="multi")return v.join(", ");
+  if(s.type==="contact")return [v.nom,v.tel,v.email].filter(Boolean).join(" · ");
+  return String(v);
+}
+
+async function ask(i,{replay=false}={}){
+  const s=STEPS[i];progress(i);
+  if(s.section&&!replay)addSection(s.section);
+  if(!replay)await botSay(sayText(s));
+  renderInput(s,i);
+}
+
+function renderInput(s,i){
+  const box=$("#input");box.innerHTML="";
+  const err=document.createElement("div");err.className="err";err.setAttribute("role","alert");
+  const fail=m=>{err.textContent=m};
+  const below=document.createElement("div");below.className="below";
+  const backBtn=history.length?`<button type="button" id="backBtn">← Question précédente</button>`:"<span></span>";
+  below.innerHTML=backBtn+(s.optional?`<button type="button" id="skipBtn">Passer</button>`:"");
+
+  if(s.type==="choice"){
+    const c=document.createElement("div");c.className="chips";
+    optList(s).forEach(o=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=o;
+      b.addEventListener("click",()=>submit(s,i,o,fail));c.appendChild(b)});
+    box.append(c);
+  }else if(s.type==="multi"){
+    const sel=new Set(Array.isArray(answers[s.id])?answers[s.id]:[]);
+    const c=document.createElement("div");c.className="chips";
+    const ok=document.createElement("button");ok.type="button";ok.className="send";ok.style.padding="10px 18px";
+    const refresh=()=>{c.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",sel.has(b.textContent)));
+      ok.disabled=!sel.size;ok.textContent=sel.size?`Valider (${sel.size})`:"Sélectionnez au moins un choix"};
+    optList(s).forEach(o=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=o;
+      b.addEventListener("click",()=>{
+        if(sel.has(o))sel.delete(o);else{
+          if(o===s.exclusive)sel.clear();else if(s.exclusive)sel.delete(s.exclusive);
+          sel.add(o)}
+        refresh()});c.appendChild(b)});
+    ok.addEventListener("click",()=>submit(s,i,optList(s).filter(o=>sel.has(o)),fail));
+    const a=document.createElement("div");a.className="multi-actions";a.appendChild(ok);
+    box.append(c,a);refresh();
+  }else if(s.type==="contact"){
+    const v=answers.contact||{};
+    const f=document.createElement("form");f.innerHTML=`<div class="fieldgrid">
+      <input class="full" name="nom" placeholder="Nom et prénom" autocomplete="name" value="${esc(v.nom||(answers.prenom||""))}">
+      <input name="tel" type="tel" placeholder="Téléphone" autocomplete="tel" inputmode="tel" value="${esc(v.tel||"")}">
+      <input name="email" type="email" placeholder="E-mail" autocomplete="email" value="${esc(v.email||"")}"></div>
+      <div class="multi-actions"><button class="send" style="padding:10px 18px">Valider</button></div>`;
+    f.addEventListener("submit",e=>{e.preventDefault();
+      const d=Object.fromEntries(new FormData(f));Object.keys(d).forEach(x=>d[x]=d[x].trim());
+      if(d.nom.length<2)return fail("Indiquez votre nom.");
+      if(!d.tel&&!d.email)return fail("Indiquez au moins un téléphone ou un e-mail.");
+      if(d.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email))return fail("L'adresse e-mail semble incomplète.");
+      if(d.tel&&d.tel.replace(/\D/g,"").length<9)return fail("Le numéro de téléphone semble incomplet.");
+      submit(s,i,d,fail)});
+    box.append(f);setTimeout(()=>f.querySelector("input").focus(),50);
+  }else{
+    const f=document.createElement("form");f.className="inrow";
+    const inp=document.createElement(s.multiline?"textarea":"input");
+    inp.placeholder=s.placeholder||"";inp.setAttribute("aria-label",s.placeholder||"Votre réponse");
+    if(s.type==="number"){inp.inputMode=s.unit==="€"||/€/.test(s.unit)?"numeric":"decimal";inp.autocomplete="off"}
+    if(answers[s.id]!=null)inp.value=answers[s.id];
+    const send=document.createElement("button");send.className="send";send.textContent="Envoyer";
+    f.append(inp,send);
+    if(s.multiline)inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();f.requestSubmit()}});
+    f.addEventListener("submit",e=>{e.preventDefault();
+      let v=inp.value.trim();
+      if(!v){if(s.optional)return submit(s,i,"",fail);return fail("Votre réponse est vide.")}
+      if(s.type==="number"){const n=parseNum(v);
+        if(isNaN(n))return fail("Indiquez un nombre, par exemple "+(s.placeholder||"").replace(/^Ex\. /,"")+".");
+        if(s.min!=null&&n<s.min)return fail(`Le minimum est ${s.min.toLocaleString("fr-FR")}${s.unit?" "+s.unit:""}.`);
+        if(s.max!=null&&n>s.max)return fail(`Cela semble beaucoup : vérifiez le montant.`);
+        v=n}
+      submit(s,i,v,fail)});
+    box.append(f);setTimeout(()=>inp.focus(),50);
+  }
+  box.append(err,below);
+  const bb=$("#backBtn");if(bb)bb.addEventListener("click",()=>editFrom(history[history.length-1]));
+  const sk=$("#skipBtn");if(sk)sk.addEventListener("click",()=>submit(s,i,"",fail));
+}
+
+async function submit(s,i,v,fail){
+  if(s.validate){const r=s.validate(v);if(r!==true){
+    if(s.id==="rgpd"){answers.rgpd=v;save();$("#input").innerHTML="";addMsg("me",esc(v));await botSay(r,"tip");return finish(false)}
+    return fail(r)}}
+  answers[s.id]=v;history.push(s.id);save();
+  $("#input").innerHTML="";
+  addMsg("me",esc(v===""?"(passé)":display(s,v)),{editId:s.id});
+  if(s.react){const r=s.react(answers);if(r)await botSay(r,"tip")}
+  const n=nextStepIndex(i+1);
+  if(n<0)return finish(true);
+  ask(n);
+}
+
+/* Revenir à une question : on efface la suite et on rejoue l'historique */
+function editFrom(id){
+  const pos=history.indexOf(id);if(pos<0)return;
+  history=history.slice(0,pos);
+  const keep={};history.forEach(h=>keep[h]=answers[h]);
+  const prev=answers[id];answers=keep;answers[id]=prev; // pré-remplit la réponse modifiée
+  save();rebuild();
+}
+function rebuild(){
+  $("#log").innerHTML="";
+  const shown=new Set();
+  history.forEach(id=>{
+    const s=STEPS.find(x=>x.id===id);
+    if(s.section&&!shown.has(s.section)){addSection(s.section);shown.add(s.section)}
+    addMsg("bot",esc(sayText(s)));
+    addMsg("me",esc(answers[id]===""?"(passé)":display(s,answers[id])),{editId:id});
+  });
+  const last=history.length?STEPS.findIndex(x=>x.id===history[history.length-1]):-1;
+  const n=nextStepIndex(last+1);
+  if(n<0)return finish(answers.rgpd==="J'accepte",true);
+  const s=STEPS[n];
+  if(s.section&&!shown.has(s.section))addSection(s.section);
+  addMsg("bot",esc(sayText(s)));
+  progress(n);renderInput(s,n);
+}
+
+/* ============================================================
+   Analyse et synthèse
+   ============================================================ */
+function analyse(a){
+  const notes=[];let score=0;
+  // Calendrier
+  score+={"Dès que possible":3,"D'ici 3 mois":3,"D'ici 6 mois":2,"Dans plus de 6 mois":1,"Je me renseigne":0}[a.delai]||0;
+  // Financement
+  if(a.financement==="Achat comptant")score+=3;
+  else if(a.banque==="Oui, accord de principe")score+=3;
+  else if(a.banque==="J'ai fait une simulation")score+=2;
+  else if(a.financement==="Prêt immobilier")score+=1;
+  // Vente préalable
+  if(/^Oui, je dois vendre/.test(a.venteNecessaire||"")){
+    score+=a.venteAvancement==="Compromis signé"?1:-1;
+    notes.push(a.venteAvancement==="Compromis signé"?"Vente du bien actuel sous compromis : financement sécurisé à la réitération.":"Achat conditionné à la vente du bien actuel : proposer une estimation / un mandat.")}
+  if(a.estimationOfferte==="Oui, avec plaisir")notes.push("🏠 Demande d'estimation de son bien actuel : piste de mandat vendeur.");
+  if(a.visites==="Beaucoup, sans succès")score+=1;
+  // Faisabilité
+  let enveloppe=null,cap=null;
+  const tauxFrais=a.etat==="Neuf ou récent"?FIN.notaireNeuf:FIN.notaireAncien;
+  const fraisNotaire=a.budget?a.budget*tauxFrais:0;
+  if(a.financement==="Achat comptant")enveloppe=null;
+  else if(a.montantBanque)enveloppe=a.montantBanque+(a.apport||0);
+  else if(a.revenus>0){cap=capacite(a.revenus,a.credits);enveloppe=cap.montant+(a.apport||0)}
+  let fin="Non évalué";
+  if(enveloppe!=null&&a.budget){const need=a.budget+fraisNotaire,r=enveloppe/need;
+    fin=r>=1?"Cohérent":r>=0.9?"Un peu juste":"Écart important";
+    if(r<0.9){score-=1;notes.push(`Budget de ${k(a.budget)} difficilement finançable (enveloppe estimée ${k(enveloppe)} pour ${k(need)} avec frais).`)}
+    else if(r>=1)score+=1}
+  // Marché
+  let marche=null;
+  if(a.surface&&a.budget&&a.typeBien!=="Terrain à bâtir"){
+    const pm=prixM2(a),r=a.budget/(pm*a.surface);
+    marche={pm,ratio:r,surfPossible:Math.round(a.budget/pm/5)*5};
+    if(r<0.9)notes.push(`Attentes supérieures au budget : ~${marche.surfPossible} m² réalistes à ${Math.round(pm).toLocaleString("fr-FR")} €/m² moyen. Recadrer (surface, secteur ou travaux).`);
+  }
+  if(/^Oui/.test(a.premierAchat||"")&&a.objectif==="Résidence principale")notes.push("Primo-accédant : vérifier l'éligibilité au PTZ.");
+  if(a.courtier==="Oui, volontiers")notes.push("💼 Souhaite être mis en relation avec un courtier.");
+  if(a.objectif==="Investissement locatif")notes.push("Investisseur : préparer rentabilité locative et contraintes DPE.");
+  const temp=score>=6?["hot","Projet chaud"]:score>=3?["warm","Projet à mûrir"]:["cold","Projet en réflexion"];
+  return {score,temp,notes,enveloppe,cap,fin,fraisNotaire,marche};
+}
+
+function recapRows(){
+  return STEPS.filter(s=>answers[s.id]!==undefined&&s.id!=="rgpd"&&s.id!=="prenom").map(s=>{
+    const label={objectif:"Objectif",foyer:"Foyer",enfants:"Enfants",premierAchat:"Premier achat",logementActuel:"Logement actuel",
+      venteNecessaire:"Vente nécessaire",venteAvancement:"Avancement de la vente",estimationOfferte:"Estimation du bien actuel",
+      typeBien:"Type de bien",etat:"État accepté",communes:"Communes",criteresLieu:"Emplacement",surface:"Surface min.",
+      chambres:"Chambres min.",terrain:"Terrain",surfaceTerrain:"Surface de terrain",etage:"Étage",equipements:"Indispensables",dpe:"DPE",
+      coupDeCoeur:"Décisif / rédhibitoire",budget:"Budget max",financement:"Financement",apport:"Apport",banque:"Banque",
+      montantBanque:"Montant accordé",revenus:"Revenus nets / mois",credits:"Crédits en cours / mois",courtier:"Courtier",
+      delai:"Délai",visites:"Visites déjà faites",offreRefusee:"Freins",contact:"Contact",moyen:"Moyen préféré",creneau:"Créneaux"}[s.id]||s.id;
+    return [label,display(s,answers[s.id])];
+  }).filter(r=>r[1]!=="—");
+}
+
+function recapText(an){
+  const a=answers,lines=[];
+  lines.push(`FICHE PROJET ACQUÉREUR — ${a.contact?.nom||a.prenom}`);
+  lines.push(`Reçue le ${new Date().toLocaleDateString("fr-FR")} · ${an.temp[1]} (score ${an.score}/10)`);
+  lines.push("");
+  recapRows().forEach(([l,v])=>lines.push(`${l} : ${v}`));
+  lines.push("");
+  lines.push(`Frais de notaire estimés : ${a.budget?k(an.fraisNotaire):"—"}`);
+  if(an.enveloppe!=null)lines.push(`Enveloppe de financement estimée : ${k(an.enveloppe)} (${an.fin})`);
+  if(an.marche)lines.push(`Prix moyen secteur : ${Math.round(an.marche.pm).toLocaleString("fr-FR")} €/m² → ~${an.marche.surfPossible} m² pour ce budget`);
+  if(an.notes.length){lines.push("");lines.push("Points d'attention :");an.notes.forEach(n=>lines.push("- "+n))}
+  return lines.join("\n");
+}
+
+async function finish(consent,silent=false){
+  progress(-1);$("#input").innerHTML="";
+  const an=analyse(answers),a=answers;
+  if(!silent)await botSay(consent?`Merci ${a.prenom} ! Voici la synthèse de votre projet. ${a.contact&&AGENCE.email?"Envoyez-la à l'agence en un clic : ":""}${AGENCE.conseiller[0].toUpperCase()+AGENCE.conseiller.slice(1)} vous recontactera rapidement.`:"Voici votre récapitulatif.");
+  const txt=recapText(an);
+  const card=document.createElement("div");card.className="card";
+  const kp=[["Budget max",a.budget?k(a.budget):"—"],["Frais de notaire estimés",a.budget?k(an.fraisNotaire):"—"]];
+  if(an.enveloppe!=null)kp.push(["Enveloppe de financement",k(an.enveloppe)]);
+  if(an.marche)kp.push(["Surface réaliste pour ce budget","~"+an.marche.surfPossible+" m²"]);
+  card.innerHTML=`<h2>Votre projet en un coup d'œil</h2>
+    <p class="sub"><span class="badge ${an.temp[0]}">${an.temp[1]}</span> · Financement : ${esc(an.fin)}</p>
+    <div class="kpis">${kp.map(([l,v])=>`<div class="kpi"><span>${l}</span><b>${v}</b></div>`).join("")}</div>
+    ${an.notes.length?`<h3>À retenir</h3><ul>${an.notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:""}
+    <h3>Vos réponses</h3>
+    <table>${recapRows().map(([l,v])=>`<tr><td>${esc(l)}</td><td>${esc(v)}</td></tr>`).join("")}</table>
+    <div class="actions">
+      ${consent&&AGENCE.email?`<a class="btn primary" id="mailBtn" href="mailto:${encodeURIComponent(AGENCE.email)}?subject=${encodeURIComponent("Projet d'achat — "+(a.contact?.nom||a.prenom))}&body=${encodeURIComponent(txt)}">Envoyer à l'agence</a>`:""}
+      <button class="btn${consent&&AGENCE.email?"":" primary"}" type="button" id="copyBtn">Copier le récapitulatif</button>
+      <button class="btn" type="button" id="dlBtn">Télécharger</button>
+      <button class="btn" type="button" id="printBtn">Imprimer / PDF</button>
+    </div>
+    ${AGENCE.telephone?`<p class="legal">Une question ? Appelez l'agence au ${esc(AGENCE.telephone)}.</p>`:""}
+    <p class="legal">Les montants de financement et de marché sont des ordres de grandeur indicatifs (taux ${FIN.taux.toLocaleString("fr-FR")} % sur ${FIN.duree} ans, endettement 35 %, prix moyens du secteur). Ils ne constituent ni une offre de prêt ni une estimation.</p>`;
+  $("#log").appendChild(card);scrollDown();
+  card.querySelector("#copyBtn").addEventListener("click",async()=>{
+    try{await navigator.clipboard.writeText(txt);toast("Récapitulatif copié")}catch(e){toast("Copie impossible : utilisez Télécharger")}});
+  card.querySelector("#dlBtn").addEventListener("click",()=>{
+    const blob=new Blob([txt],{type:"text/plain;charset=utf-8"}),u=URL.createObjectURL(blob),l=document.createElement("a");
+    l.href=u;l.download=`projet-achat-${(a.contact?.nom||a.prenom||"client").replace(/\s+/g,"-").toLowerCase()}.txt`;l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)});
+  card.querySelector("#printBtn").addEventListener("click",()=>window.print());
+}
+
+/* ============================================================
+   Démarrage
+   ============================================================ */
+function start(){
+  answers={};history=[];$("#log").innerHTML="";ask(nextStepIndex(0));
+}
+$("#restart").addEventListener("click",()=>{if(history.length&&!confirm("Effacer vos réponses et recommencer ?"))return;lsDel(STORE);start()});
+const saved=lsGet(STORE);
+if(saved&&Array.isArray(saved.history)&&saved.history.length&&saved.history.every(id=>STEPS.some(s=>s.id===id))){
+  answers=saved.answers||{};history=saved.history;rebuild();
+  addMsg("tip",`Bon retour ${esc(answers.prenom||"")} ! Vous reprenez là où vous vous étiez arrêté(e).`);
+}else start();
+</script>
+</body>
+</html>
